@@ -1,7 +1,10 @@
 package muchfight
 
 import (
+	"fmt"
 	"log/slog"
+	"os"
+	"os/exec"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -39,10 +42,49 @@ func parseFlags() error {
 }
 
 func run() error {
-	slog.Debug("Debug", "currrent level", opts.logLevel)
-	slog.Info("Info", "currrent level", opts.logLevel)
-	slog.Warn("Warn", "currrent level", opts.logLevel)
-	slog.Error("Error", "currrent level", opts.logLevel)
+	mdfindCmdSlice := []string{
+		"mdfind",
+		`kMDItemFSContentChangeDate >= $time.now(-7200) && kMDItemFSName == '*.go'`,
+		"-onlyin", "/Users/mtm/pdev",
+	}
+	xargsCmdSlice := []string{
+		"xargs",
+		"-d", "\n",
+		"-a", "-",
+		"rg", "-l", "Command",
+	}
+
+	mdfindCmd := exec.Command(mdfindCmdSlice[0], mdfindCmdSlice[1:]...)
+	xargsCmd := exec.Command(xargsCmdSlice[0], xargsCmdSlice[1:]...)
+
+	pipe, err := mdfindCmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("error creating pipe: %w", err)
+	}
+	xargsCmd.Stdin = pipe
+
+	xargsCmd.Stdout = os.Stdout
+	xargsCmd.Stderr = os.Stderr
+
+	err = mdfindCmd.Start()
+	if err != nil {
+		return fmt.Errorf("error starting mdfind: %w", err)
+	}
+
+	err = xargsCmd.Start()
+	if err != nil {
+		return fmt.Errorf("error starting xargs: %w", err)
+	}
+
+	err = mdfindCmd.Wait()
+	if err != nil {
+		return fmt.Errorf("error waiting for mdfind: %w", err)
+	}
+
+	err = xargsCmd.Wait()
+	if err != nil {
+		return fmt.Errorf("error waiting for xargs: %w", err)
+	}
 
 	return nil
 }
