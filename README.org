@@ -2,7 +2,25 @@
 
 ** summary
 
-This is a description of project muchfight.
+Learn how to use golang pipes.
+
+Running this:
+#+begin_example
+./muchfight
+#+end_example
+
+Is the same as doing this in bash:
+#+begin_example
+mdfind -onlyin /Users/mtm/pdev 'kMDItemFSContentChangeDate >= $time.now(-172800) && kMDItemFSName == "*.go"' |
+    xargs -d '\n' -a - rg -l Command |
+    xargs -d '\n' -a - rg -l bloom
+#+end_example
+
+** install
+
+#+begin_example
+make install
+#+end_example
 
 ** usage
 
