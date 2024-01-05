@@ -1,5 +1,11 @@
 * muchfight
 
+** motivation
+
+I fiddled with some temp project within the last week but I don't
+remember the project name but I remember some *.go files in the
+project contain both Command and bloom.
+
 ** summary
 
 Learn how to use golang pipes.
