@@ -42,71 +42,61 @@ func parseFlags() error {
 }
 
 func run() error {
-	mdfindCmdSlice := []string{
+	chain := make([]*exec.Cmd, 0, 1)
+
+	cmd := exec.Command(
 		"mdfind",
 		`kMDItemFSContentChangeDate >= $time.now(-172800) && kMDItemFSName == '*.go'`,
 		"-onlyin", "/Users/mtm/pdev",
+	)
+
+	chain = append(chain, cmd)
+	pipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("error creating pipe: %w", err)
 	}
 
-	xargsCmdSlice := []string{
+	cmd = exec.Command(
 		"xargs",
 		"-d", "\n",
 		"-a", "-",
 		"rg", "-l", "Command",
+	)
+	cmd.Stdin = pipe
+
+	pipe, err = cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("error creating pipe: %w", err)
 	}
 
-	xargs2CmdSlice := []string{
+	chain = append(chain, cmd)
+
+	cmd = exec.Command(
 		"xargs",
 		"-d", "\n",
 		"-a", "-",
 		"rg", "-l", "bloom",
+	)
+
+	cmd.Stdin = pipe
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	chain = append(chain, cmd)
+
+	for _, cmd := range chain {
+		err := cmd.Start()
+		if err != nil {
+			return fmt.Errorf("error starting %s: %w", cmd.Path, err)
+		}
 	}
 
-	mdfindCmd := exec.Command(mdfindCmdSlice[0], mdfindCmdSlice[1:]...)
-	xargsCmd := exec.Command(xargsCmdSlice[0], xargsCmdSlice[1:]...)
-	xargs2Cmd := exec.Command(xargs2CmdSlice[0], xargs2CmdSlice[1:]...)
-
-	pipe, err := mdfindCmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("error creating pipe: %w", err)
-	}
-	xargsCmd.Stdin = pipe
-
-	pipe2, err := xargsCmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("error creating pipe: %w", err)
-	}
-	xargs2Cmd.Stdin = pipe2
-
-	xargs2Cmd.Stdout = os.Stdout
-	xargs2Cmd.Stderr = os.Stderr
-
-	err = mdfindCmd.Start()
-	if err != nil {
-		return fmt.Errorf("error starting mdfind: %w", err)
-	}
-	err = xargsCmd.Start()
-	if err != nil {
-		return fmt.Errorf("error starting xargs: %w", err)
-	}
-	err = xargs2Cmd.Start()
-	if err != nil {
-		return fmt.Errorf("error starting xargs2: %w", err)
-	}
-
-	err = mdfindCmd.Wait()
-	if err != nil {
-		return fmt.Errorf("error waiting for mdfind: %w", err)
-	}
-
-	err = xargsCmd.Wait()
-	if err != nil {
-		return fmt.Errorf("error waiting for xargs: %w", err)
-	}
-
-	err = xargs2Cmd.Wait()
-	if err != nil {
-		return fmt.Errorf("error waiting for xargs2: %w", err)
+	for _, cmd := range chain {
+		err := cmd.Wait()
+		if err != nil {
+			return fmt.Errorf("error waiting for %s: %w", cmd.Path, err)
+		}
 	}
 
 	return nil
