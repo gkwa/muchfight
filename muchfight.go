@@ -44,9 +44,10 @@ func parseFlags() error {
 func run() error {
 	mdfindCmdSlice := []string{
 		"mdfind",
-		`kMDItemFSContentChangeDate >= $time.now(-7200) && kMDItemFSName == '*.go'`,
+		`kMDItemFSContentChangeDate >= $time.now(-172800) && kMDItemFSName == '*.go'`,
 		"-onlyin", "/Users/mtm/pdev",
 	}
+
 	xargsCmdSlice := []string{
 		"xargs",
 		"-d", "\n",
@@ -54,8 +55,16 @@ func run() error {
 		"rg", "-l", "Command",
 	}
 
+	xargs2CmdSlice := []string{
+		"xargs",
+		"-d", "\n",
+		"-a", "-",
+		"rg", "-l", "bloom",
+	}
+
 	mdfindCmd := exec.Command(mdfindCmdSlice[0], mdfindCmdSlice[1:]...)
 	xargsCmd := exec.Command(xargsCmdSlice[0], xargsCmdSlice[1:]...)
+	xargs2Cmd := exec.Command(xargs2CmdSlice[0], xargs2CmdSlice[1:]...)
 
 	pipe, err := mdfindCmd.StdoutPipe()
 	if err != nil {
@@ -63,17 +72,26 @@ func run() error {
 	}
 	xargsCmd.Stdin = pipe
 
-	xargsCmd.Stdout = os.Stdout
-	xargsCmd.Stderr = os.Stderr
+	pipe2, err := xargsCmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("error creating pipe: %w", err)
+	}
+	xargs2Cmd.Stdin = pipe2
+
+	xargs2Cmd.Stdout = os.Stdout
+	xargs2Cmd.Stderr = os.Stderr
 
 	err = mdfindCmd.Start()
 	if err != nil {
 		return fmt.Errorf("error starting mdfind: %w", err)
 	}
-
 	err = xargsCmd.Start()
 	if err != nil {
 		return fmt.Errorf("error starting xargs: %w", err)
+	}
+	err = xargs2Cmd.Start()
+	if err != nil {
+		return fmt.Errorf("error starting xargs2: %w", err)
 	}
 
 	err = mdfindCmd.Wait()
@@ -84,6 +102,11 @@ func run() error {
 	err = xargsCmd.Wait()
 	if err != nil {
 		return fmt.Errorf("error waiting for xargs: %w", err)
+	}
+
+	err = xargs2Cmd.Wait()
+	if err != nil {
+		return fmt.Errorf("error waiting for xargs2: %w", err)
 	}
 
 	return nil
