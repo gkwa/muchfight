@@ -17,7 +17,7 @@ Running this:
 
 Is the same as doing this in bash:
 #+begin_example
-mdfind -onlyin /Users/mtm/pdev 'kMDItemFSContentChangeDate >= $time.now(-172800) && kMDItemFSName == "*.go"' |
+mdfind -onlyin /Users/mtm/pdev 'kMDItemFSContentChangeDate >= $time.now(-604800) && kMDItemFSName == "*.go"' |
     xargs -d '\n' -a - rg -l Command |
     xargs -d '\n' -a - rg -l bloom
 #+end_example
