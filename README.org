@@ -1,0 +1,14 @@
+* muchfight
+
+** summary
+
+This is a description of project muchfight.
+
+** usage
+
+Example:
+#+begin_example
+make test
+./muchfight --help
+./muchfight --verbose --verbose # for debug
+#+end_example
