@@ -42,7 +42,7 @@ func parseFlags() error {
 }
 
 func run() error {
-	keywords := []string{"Command", "boom"}
+	keywords := []string{"Command", "bloom"}
 
 	chain := make([]*exec.Cmd, 0, 1)
 
@@ -53,8 +53,6 @@ func run() error {
 	)
 
 	chain = append(chain, cmd)
-
-	fmt.Println(cmd.String())
 
 	pipe, err := cmd.StdoutPipe()
 	if err != nil {
@@ -70,7 +68,6 @@ func run() error {
 		)
 		cmd.Args = append(cmd.Args, word)
 
-		fmt.Println(cmd.String())
 		cmd.Stdin = pipe
 
 		chain = append(chain, cmd)
@@ -87,6 +84,7 @@ func run() error {
 	cmd.Stderr = os.Stderr
 
 	for _, cmd := range chain {
+		fmt.Printf("run: %s\n", cmd.String())
 		err := cmd.Start()
 		if err != nil {
 			return fmt.Errorf("error starting %s: %w", cmd.Path, err)
@@ -94,6 +92,7 @@ func run() error {
 	}
 
 	for _, cmd := range chain {
+		fmt.Printf("wait: %s\n", cmd.String())
 		err := cmd.Wait()
 		if err != nil {
 			return fmt.Errorf("error waiting for %s: %w", cmd.Path, err)
