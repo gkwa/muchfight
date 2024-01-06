@@ -84,7 +84,6 @@ func run() error {
 	cmd.Stderr = os.Stderr
 
 	for _, cmd := range chain {
-		fmt.Printf("run: %s\n", cmd.String())
 		err := cmd.Start()
 		if err != nil {
 			return fmt.Errorf("error starting %s: %w", cmd.Path, err)
@@ -92,7 +91,6 @@ func run() error {
 	}
 
 	for _, cmd := range chain {
-		fmt.Printf("wait: %s\n", cmd.String())
 		err := cmd.Wait()
 		if err != nil {
 			return fmt.Errorf("error waiting for %s: %w", cmd.Path, err)
