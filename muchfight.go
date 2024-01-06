@@ -13,6 +13,7 @@ var opts struct {
 	LogFormat string `long:"log-format" choice:"text" choice:"json" default:"text" description:"Log format"`
 	Verbose   []bool `short:"v" long:"verbose" description:"Show verbose debug information, each -v bumps log level"`
 	logLevel  slog.Level
+	Search    []string `short:"s" long:"search" description:"Filter files that contain search string."`
 }
 
 func Execute() int {
@@ -42,7 +43,7 @@ func parseFlags() error {
 }
 
 func run() error {
-	keywords := []string{"Command", "bloom"}
+	keywords := opts.Search
 
 	chain := make([]*exec.Cmd, 0, 1)
 
