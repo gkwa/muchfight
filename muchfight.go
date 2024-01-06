@@ -42,6 +42,8 @@ func parseFlags() error {
 }
 
 func run() error {
+	keywords := []string{"Command", "boom"}
+
 	chain := make([]*exec.Cmd, 0, 1)
 
 	cmd := exec.Command(
@@ -51,39 +53,38 @@ func run() error {
 	)
 
 	chain = append(chain, cmd)
+
+	fmt.Println(cmd.String())
+
 	pipe, err := cmd.StdoutPipe()
 	if err != nil {
 		return fmt.Errorf("error creating pipe: %w", err)
 	}
 
-	cmd = exec.Command(
-		"xargs",
-		"-d", "\n",
-		"-a", "-",
-		"rg", "-l", "Command",
-	)
-	cmd.Stdin = pipe
+	for _, word := range keywords {
+		cmd = exec.Command(
+			"xargs",
+			"-d", "\n",
+			"-a", "-",
+			"rg", "-l",
+		)
+		cmd.Args = append(cmd.Args, word)
 
-	pipe, err = cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("error creating pipe: %w", err)
+		fmt.Println(cmd.String())
+		cmd.Stdin = pipe
+
+		chain = append(chain, cmd)
+
+		pipe, err = cmd.StdoutPipe()
+		if err != nil {
+			return fmt.Errorf("error creating pipe: %w", err)
+		}
 	}
 
-	chain = append(chain, cmd)
-
-	cmd = exec.Command(
-		"xargs",
-		"-d", "\n",
-		"-a", "-",
-		"rg", "-l", "bloom",
-	)
-
-	cmd.Stdin = pipe
+	cmd = chain[len(chain)-1]
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-
-	chain = append(chain, cmd)
 
 	for _, cmd := range chain {
 		err := cmd.Start()
