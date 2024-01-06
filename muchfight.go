@@ -65,9 +65,8 @@ func run() error {
 			"xargs",
 			"-d", "\n",
 			"-a", "-",
-			"rg", "-l",
+			"rg", "-l", word,
 		)
-		cmd.Args = append(cmd.Args, word)
 
 		cmd.Stdin = pipe
 
