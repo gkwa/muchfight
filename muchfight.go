@@ -43,7 +43,7 @@ func parseFlags() error {
 }
 
 func run() error {
-	keywords := opts.Search
+	searches := opts.Search
 
 	chain := make([]*exec.Cmd, 0, 1)
 
@@ -60,12 +60,12 @@ func run() error {
 		return fmt.Errorf("error creating pipe: %w", err)
 	}
 
-	for _, word := range keywords {
+	for _, search := range searches {
 		cmd = exec.Command(
 			"xargs",
 			"-d", "\n",
 			"-a", "-",
-			"rg", "-l", word,
+			"rg", "-l", search,
 		)
 
 		cmd.Stdin = pipe
